@@ -12,15 +12,15 @@ data Island =
   | Eight
   | Nine
   | Ten
-  deriving (Show, Enum, Bounded)
+  deriving (Eq, Show, Enum, Bounded)
 
 
 next :: Island -> Island
-next current 
+next current
   | current == maxBound = minBound
   | otherwise = succ current
-  
+
 prev :: Island -> Island
-prev current 
+prev current
   | current == minBound = maxBound
-  | otherwise = pred current 
+  | otherwise = pred current
