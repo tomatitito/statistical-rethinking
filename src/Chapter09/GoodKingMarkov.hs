@@ -1,6 +1,6 @@
 module Chapter09.GoodKingMarkov where
 
--- TODO 0: datatype for Island
+
 data Island =
     One
   | Two
@@ -16,11 +16,11 @@ data Island =
 
 
 next :: Island -> Island
-next current = 
+next current 
   | current == maxBound = minBound
   | otherwise = succ current
   
 prev :: Island -> Island
-prev current =
+prev current 
   | current == minBound = maxBound
   | otherwise = pred current 
