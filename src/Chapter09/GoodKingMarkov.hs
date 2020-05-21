@@ -1,8 +1,8 @@
 module Chapter09.GoodKingMarkov where
 
 -- TODO 0: datatype for Island
-data Island = 
-    One 
+data Island =
+    One
   | Two
   | Three
   | Four
@@ -11,7 +11,16 @@ data Island =
   | Seven
   | Eight
   | Nine
-  | Ten 
+  | Ten
   deriving (Show, Enum, Bounded)
-  
 
+
+next :: Island -> Island
+next current = 
+  | current == maxBound = minBound
+  | otherwise = succ current
+  
+prev :: Island -> Island
+prev current =
+  | current == minBound = maxBound
+  | otherwise = pred current 
