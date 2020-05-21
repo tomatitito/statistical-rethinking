@@ -41,8 +41,8 @@ instance Random Move where
 propose :: Island Direction -> Island
 propose current to =
   case to of
-    Clockwise -> next current
-    Counterclockwise -> prev current
+    Clockwise -> clockwise current
+    Counterclockwise -> counterclockwise current
 
 
 
