@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 48475906e9466f2d79c265ab97263821e97cd8fc3e3ab2ac9c6c9c4ab736518b
+-- hash: 889c5be98235ca304f72a745ad335fc79cf26c4682623c68a0e5b67eb3e07963
 
 name:           statistical-rethinking
 version:        0.1.0.0
@@ -36,7 +36,9 @@ library
   build-depends:
       base >=4.7 && <5
     , probability
+    , random
     , rio
+    , transformers
   default-language: Haskell2010
 
 executable statistical-rethinking-exe
@@ -49,8 +51,10 @@ executable statistical-rethinking-exe
   build-depends:
       base >=4.7 && <5
     , probability
+    , random
     , rio
     , statistical-rethinking
+    , transformers
   default-language: Haskell2010
 
 test-suite statistical-rethinking-test
@@ -64,6 +68,8 @@ test-suite statistical-rethinking-test
   build-depends:
       base >=4.7 && <5
     , probability
+    , random
     , rio
     , statistical-rethinking
+    , transformers
   default-language: Haskell2010

@@ -1,5 +1,7 @@
 module Chapter09.GoodKingMarkov where
 
+import Control.Monad.Trans.State
+import System.Random
 
 data Island =
     One
@@ -24,3 +26,4 @@ prev :: Island -> Island
 prev current
   | current == minBound = maxBound
   | otherwise = pred current
+  
