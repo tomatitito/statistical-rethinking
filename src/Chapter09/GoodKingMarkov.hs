@@ -17,19 +17,14 @@ data Island =
   deriving (Eq, Show, Enum, Bounded)
 
 
-travelFrom :: Island Move -> Island
-
-rollDie' :: State StdGen Int
-rollDie' = state $ randomR (1, 10)
-
 rollDie = evalState rollDie' (mkStdGen 0)
-next :: Island -> Island
-next current
+clockwise :: Island -> Island
+clockwise current
   | current == maxBound = minBound
   | otherwise = succ current
 
-prev :: Island -> Island
-prev current
+counterclockwise :: Island -> Island
+counterclockwise current
   | current == minBound = maxBound
   | otherwise = pred current
 
@@ -43,4 +38,14 @@ instance Random Move where
   random g =
     randomR (minBound, maxBound) g
 
+propose :: Island Direction -> Island
+propose current to =
+  case to of
+    Clockwise -> next current
+    Counterclockwise -> prev current
+
+
+
+rollDie' :: State StdGen Int
+rollDie' = state $ randomR (1, 10)
 
