@@ -16,6 +16,15 @@ data Island =
   | Ten
   deriving (Eq, Show, Enum, Bounded)
   
+data Direction = Clockwise | Counterclockwise
+  deriving (Eq, Show, Enum, Bounded)
+
+instance Random Direction where
+  randomR (a, b) g =
+    case randomR (fromEnum a, fromEnum b) g of
+      (x, g') -> (toEnum x, g')
+  random = randomR (minBound, maxBound)
+
 clockwise :: Island -> Island
 clockwise current
   | current == maxBound = minBound
@@ -25,15 +34,6 @@ counterclockwise :: Island -> Island
 counterclockwise current
   | current == minBound = maxBound
   | otherwise = pred current
-
-data Direction = Clockwise | Counterclockwise
-  deriving (Eq, Show, Enum, Bounded)
-
-instance Random Direction where
-  randomR (a, b) g =
-    case randomR (fromEnum a, fromEnum b) g of
-      (x, g') -> (toEnum x, g')
-  random = randomR (minBound, maxBound)
 
 propose :: Island -> Direction -> Island
 propose current to =
