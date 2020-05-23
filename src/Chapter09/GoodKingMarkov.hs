@@ -43,8 +43,9 @@ propose current to =
     Clockwise -> clockwise current
     Counterclockwise -> counterclockwise current
 
+randomDirection' :: State StdGen Direction
+randomDirection' = state $ random -- (mkStdGen 0)
 
-
-rollDie' :: State StdGen Int
-rollDie' = state $ randomR (1, 10)
+randomDirection :: Direction
+randomDirection = evalState randomDirection' (mkStdGen 0)
 
