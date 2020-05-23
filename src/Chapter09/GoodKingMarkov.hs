@@ -31,12 +31,11 @@ counterclockwise current
 data Direction = Clockwise | Counterclockwise
   deriving (Eq, Show, Enum, Bounded)
 
-instance Random Move where
+instance Random Direction where
   randomR (a, b) g =
     case randomR (fromEnum a, fromEnum b) g of
       (x, g') -> (toEnum x, g')
-  random g =
-    randomR (minBound, maxBound) g
+  random = randomR (minBound, maxBound)
 
 propose :: Island Direction -> Island
 propose current to =
