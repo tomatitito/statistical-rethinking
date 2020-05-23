@@ -37,7 +37,7 @@ instance Random Direction where
       (x, g') -> (toEnum x, g')
   random = randomR (minBound, maxBound)
 
-propose :: Island Direction -> Island
+propose :: Island -> Direction -> Island
 propose current to =
   case to of
     Clockwise -> clockwise current
