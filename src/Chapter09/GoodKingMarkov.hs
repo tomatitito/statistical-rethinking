@@ -15,9 +15,7 @@ data Island =
   | Nine
   | Ten
   deriving (Eq, Show, Enum, Bounded)
-
-
-rollDie = evalState rollDie' (mkStdGen 0)
+  
 clockwise :: Island -> Island
 clockwise current
   | current == maxBound = minBound
@@ -44,8 +42,17 @@ propose current to =
     Counterclockwise -> counterclockwise current
 
 randomDirection' :: State StdGen Direction
-randomDirection' = state $ random -- (mkStdGen 0)
+randomDirection' = state random -- (mkStdGen 0)
 
 randomDirection :: Direction
 randomDirection = evalState randomDirection' (mkStdGen 0)
 
+moveOrStay :: Int -> Island -> Island
+moveOrStay seed current =
+   let proposal = propose current randomDirection
+       randUnifValue = evalState  (state random) (mkStdGen seed) :: Float
+       probMove = fromIntegral (toInteger (fromEnum proposal) `div` fromIntegral (toInteger (fromEnum current)))
+   in 
+     if randUnifValue < probMove
+       then proposal
+       else current
