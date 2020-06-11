@@ -1,7 +1,7 @@
 module Chapter09.GoodKingMarkov where
 
-import Control.Monad.Trans.State
-import System.Random
+import           Control.Monad.Trans.State
+import           System.Random
 
 data Island =
     One
@@ -15,7 +15,21 @@ data Island =
   | Nine
   | Ten
   deriving (Eq, Show, Enum, Bounded)
-  
+
+islandToFloat :: Island -> Float
+islandToFloat island =
+  case island of
+    One   -> 1.0
+    Two   -> 2.0
+    Three -> 3.0
+    Four  -> 4.0
+    Five  -> 5.0
+    Six   -> 6.0
+    Seven -> 7.0
+    Eight -> 8.0
+    Nine  -> 9.0
+    Ten   -> 10.0
+
 data Direction = Clockwise | Counterclockwise
   deriving (Eq, Show, Enum, Bounded)
 
@@ -35,79 +49,56 @@ counterclockwise current
   | current == minBound = maxBound
   | otherwise = pred current
 
-propose' :: Island -> Direction -> Island
-propose' current to =
-  case to of
-    Clockwise -> clockwise current
-    Counterclockwise -> counterclockwise current
+randomDirection :: State StdGen Direction
+randomDirection = state random -- (mkStdGen 0)
 
-proposeHelperState :: Island -> Direction -> State StdGen Island
-proposeHelperState current direction = do
-  let proposal = propose' current direction
-  return proposal
-
-randomDirection' :: State StdGen Direction
-randomDirection' = state random -- (mkStdGen 0)
-
-randomDirection :: Direction
-randomDirection = evalState randomDirection' (mkStdGen 0)
-
-moveOrStay :: Int -> Island -> Island
-moveOrStay seed current =
-   let proposal = propose' current randomDirection
-       randUnifValue = evalState  (state random) (mkStdGen seed) :: Float
-       probMove = fromIntegral (toInteger (fromEnum proposal) `div` fromIntegral (toInteger (fromEnum current)))
-   in 
-     if randUnifValue < probMove
-       then proposal
-       else current
+randomFloat :: State StdGen Float
+randomFloat = state $ randomR (0, 1)
 
 data MarkovData =
  MarkovData
  {
-  seed :: Int,
-  chain :: [Island],
-  state' :: State StdGen Island
+  nSamples   :: Int,
+  seed       :: Int,
+  chain      :: [Island],
+  generator  :: StdGen
   }
 
-moveOrStay'' :: Island -> State StdGen Island
-moveOrStay'' current =
-  proposeHelperState current randomDirection
-
---x = evalState (moveOrStay'' 42 Ten) (mkStdGen 43)
-
-travel :: MarkovData -> MarkovData
-travel dat =
-  let islands = chain dat
-      s = state' dat
-      current = evalState s (mkStdGen (seed dat)) -- instead: get current from chain
-      newState = moveOrStay'' current
-      (newPosition, newGen) = runState newState (mkStdGen (seed dat))
-  in MarkovData {seed = seed dat, chain = newPosition:islands, state' = newState}
-
-x = chain $ travel MarkovData {seed = 42, chain = [], state' = proposeHelperState Ten Clockwise}
-
--- with MarkovData
--- propose an island (or rather, a direction)
--- decide to move or stay
--- write decision into MarkovData
--- update state in MarkovData
--- recurse
-
--- MarkovData needs to have info about recursion base case
--- travel function is recursive
--- logic is:
--- propose, decide, update
-
--- using bind :: m a -> a -> m b -> m b
---               State Island -> propose -> State Island
--- propose :: Island -> State StdGen Island
--- decide :: Island -> State StdGen Island (moveOrStay)
--- initial >>= propose
--- proposal >>= decide
+mkMarkovData :: MarkovData
+mkMarkovData = MarkovData
+  {
+    nSamples = 50,
+    seed = 42,
+    chain = [Ten],
+    generator = mkStdGen 42
+  }
 
 propose :: Island -> State StdGen Island
-propose current = do
-  generator <- get
-  let direction = evalState randomDirection' generator
-  return $ propose' current direction
+propose current = propose' current <$> randomDirection
+
+propose' :: Island -> Direction -> Island
+propose' current to =
+  case to of
+    Clockwise        -> clockwise current
+    Counterclockwise -> counterclockwise current
+
+decide :: Island -> Island -> State StdGen Island
+decide current proposal = do
+  rand <- randomFloat
+  if rand < probMove
+    then return proposal
+    else return current
+  where probMove = islandToFloat proposal / islandToFloat current :: Float
+
+travel :: MarkovData -> MarkovData
+travel appData
+  | length (chain appData) == nSamples appData = appData
+  | otherwise = travel $ appData {chain = decision:islands, generator = newGnrtr}
+
+  where
+    islands = chain appData
+    current:_ = islands
+    gnrtr = generator appData
+    decide' = decide current
+    decisionState = return current >>= propose >>= decide'
+    (decision, newGnrtr) = runState decisionState gnrtr
