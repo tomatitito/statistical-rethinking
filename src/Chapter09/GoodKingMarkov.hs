@@ -1,7 +1,10 @@
 module Chapter09.GoodKingMarkov where
 
 import           Control.Monad.Trans.State
+import           RIO.Prelude               (ask, lift)
+import           RIO.Prelude.Types         (ReaderT)
 import           System.Random
+import RIO (liftIO)
 
 data Island =
     One
@@ -55,17 +58,17 @@ randomDirection = state random -- (mkStdGen 0)
 randomFloat :: State StdGen Float
 randomFloat = state $ randomR (0, 1)
 
-data MarkovData =
- MarkovData
+data Env =
+ Env
  {
-  nSamples   :: Int,
-  seed       :: Int,
-  chain      :: [Island],
-  generator  :: StdGen
+  nSamples  :: Int,
+  seed      :: Int,
+  chain     :: [Island],
+  generator :: StdGen
   }
 
-mkMarkovData :: MarkovData
-mkMarkovData = MarkovData
+mkEnv :: Env
+mkEnv = Env
   {
     nSamples = 50,
     seed = 42,
@@ -90,7 +93,7 @@ decide current proposal = do
     else return current
   where probMove = islandToFloat proposal / islandToFloat current :: Float
 
-travel :: MarkovData -> MarkovData
+travel :: Env -> Env
 travel appData
   | length (chain appData) == nSamples appData = appData
   | otherwise = travel $ appData {chain = decision:islands, generator = newGnrtr}
