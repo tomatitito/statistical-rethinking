@@ -105,3 +105,8 @@ travel appData
     decide' = decide current
     decisionState = return current >>= propose >>= decide'
     (decision, newGnrtr) = runState decisionState gnrtr
+
+travel' :: ReaderT Env IO [Island]
+travel' = do
+  env <- ask
+  liftIO $ return $ chain env-- putStrLn "Jucheeeee"
