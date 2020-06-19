@@ -1,10 +1,11 @@
 module Chapter09.GoodKingMarkov where
 
 import           Control.Monad.Trans.State
-import           RIO.Prelude               (ask, lift)
+import Control.Monad.Trans.Reader (withReaderT)
+import           RIO.Prelude               (ask, lift, local)
 import           RIO.Prelude.Types         (ReaderT)
 import           System.Random
-import RIO (liftIO)
+import RIO (liftIO, newIORef, readIORef, writeIORef, runReaderT, modifyIORef, IORef)
 
 data Island =
     One
@@ -58,23 +59,35 @@ randomDirection = state random -- (mkStdGen 0)
 randomFloat :: State StdGen Float
 randomFloat = state $ randomR (0, 1)
 
+--newtype Chain = [Island]
+type App = ReaderT Env IO
+
 data Env =
  Env
  {
   nSamples  :: Int,
   seed      :: Int,
-  chain     :: [Island],
-  generator :: StdGen
+  chain     :: IORef [Island],
+  generator :: IORef StdGen
   }
 
-mkEnv :: Env
-mkEnv = Env
-  {
-    nSamples = 50,
-    seed = 42,
-    chain = [Ten],
-    generator = mkStdGen 42
-  }
+class HasChain a where
+  getChain :: a -> IORef [Island]
+
+--instance HasChain Chain where
+--  getChain = id
+
+instance HasChain Env where
+  getChain = chain
+
+class HasGenerator a where
+  getGenerator :: a -> IORef StdGen
+
+--instance HasGenerator (IO (IORef StdGen)) where
+--  getGenerator = id
+
+instance HasGenerator Env where
+  getGenerator = generator
 
 propose :: Island -> State StdGen Island
 propose current = propose' current <$> randomDirection
@@ -93,20 +106,42 @@ decide current proposal = do
     else return current
   where probMove = islandToFloat proposal / islandToFloat current :: Float
 
-travel :: Env -> Env
-travel appData
-  | length (chain appData) == nSamples appData = appData
-  | otherwise = travel $ appData {chain = decision:islands, generator = newGnrtr}
+modifyChain :: (HasChain env) => env -> Island -> IO ()
+modifyChain env decision = do
+  let chainRef = getChain env
+  chain <- readIORef chainRef
+  writeIORef chainRef $ decision:chain
 
-  where
-    islands = chain appData
-    current:_ = islands
-    gnrtr = generator appData
-    decide' = decide current
-    decisionState = return current >>= propose >>= decide'
-    (decision, newGnrtr) = runState decisionState gnrtr
+travel :: IO [Island]
+travel = do
+  initialChain <- newIORef [Ten]
+  initialGnrtr <- newIORef $ mkStdGen 54
+  let env = Env
+        { nSamples = 42
+        , seed = 42
+        , chain = initialChain
+        , generator = initialGnrtr
+        }
+  runReaderT
+    recursiveTravel
+    env
 
-travel' :: ReaderT Env IO [Island]
-travel' = do
-  env <- ask
-  liftIO $ return $ chain env-- putStrLn "Jucheeeee"
+  readIORef $ getChain env
+
+  where recursiveTravel :: (HasChain env, HasGenerator env) => ReaderT env IO ()
+        recursiveTravel = do
+          env <- ask
+          let chainRef = getChain env
+          chain <- liftIO $ readIORef chainRef
+          let genRef = getGenerator env
+          gen <- liftIO $ readIORef genRef
+          if length chain == 42
+            then return ()
+            else do
+              let decide' = decide (head chain)
+              let decisionState = return (head chain) >>= propose >>= decide'
+              let (decision, newGnrtr) = runState decisionState gen
+              liftIO $ modifyChain env decision
+              liftIO $ writeIORef genRef newGnrtr
+              recursiveTravel
+
