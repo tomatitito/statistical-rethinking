@@ -1,11 +1,12 @@
 module Chapter09.GoodKingMarkov where
 
 import           Control.Monad.Trans.State
-import Control.Monad.Trans.Reader (withReaderT)
-import           RIO.Prelude               (ask, lift, local)
-import           RIO.Prelude.Types         (ReaderT)
+import           RIO                        (IORef, liftIO, modifyIORef,
+                                             newIORef, readIORef, runReaderT,
+                                             writeIORef)
+import           RIO.Prelude                (ask)
+import           RIO.Prelude.Types          (ReaderT)
 import           System.Random
-import RIO (liftIO, newIORef, readIORef, writeIORef, runReaderT, modifyIORef, IORef)
 
 data Island =
     One
